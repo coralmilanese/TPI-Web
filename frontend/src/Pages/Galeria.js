@@ -39,6 +39,9 @@ function Galeria() {
   const [loadingComments, setLoadingComments] = useState(false);
   const [pendingComments, setPendingComments] = useState([]);
   const [loadingPending, setLoadingPending] = useState(false);
+  // favoritos
+  const [favoritos, setFavoritos] = useState({}); // mapa imagen_id -> favorito.id
+  const [loadingFavoritos, setLoadingFavoritos] = useState(false);
 
   // modal editar
   const [editData, setEditData] = useState({
@@ -58,6 +61,13 @@ function Galeria() {
     loadImagenes();
     // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    // cargar favoritos si hay usuario
+    if (user) loadFavoritos();
+    else setFavoritos({});
+    // eslint-disable-next-line
+  }, [user]);
 
   useEffect(() => {
     const t = setTimeout(() => loadImagenes(), 250);
@@ -80,6 +90,27 @@ function Galeria() {
       setImagenes(res.data || []);
     } catch (err) {
       console.error("Error cargando imágenes", err);
+    }
+  }
+
+  async function loadFavoritos() {
+    try {
+      setLoadingFavoritos(true);
+      const res = await axios.get(
+        "http://localhost:4000/api/favoritos",
+        authHeaders()
+      );
+      const rows = res.data || [];
+      const map = {};
+      rows.forEach((r) => {
+        if (r.imagen_id) map[r.imagen_id] = r.id;
+      });
+      setFavoritos(map);
+    } catch (err) {
+      console.error("Error cargando favoritos", err);
+      setFavoritos({});
+    } finally {
+      setLoadingFavoritos(false);
     }
   }
 
@@ -221,6 +252,38 @@ function Galeria() {
     } catch (err) {
       console.error("Error eliminando imagen", err);
       alert("No se pudo eliminar la imagen");
+    }
+  }
+
+  // Toggle favorito: si existe en favorites -> DELETE, else POST
+  async function toggleFavorito(imagenId) {
+    if (!user) return alert("Debes iniciar sesión para guardar favoritos");
+    try {
+      // si ya está favorito
+      if (favoritos[imagenId]) {
+        // eliminar
+        await axios.delete(
+          `http://localhost:4000/api/favoritos/imagen/${imagenId}`,
+          authHeaders()
+        );
+        setFavoritos((prev) => {
+          const copy = { ...prev };
+          delete copy[imagenId];
+          return copy;
+        });
+      } else {
+        // agregar
+        await axios.post(
+          "http://localhost:4000/api/favoritos",
+          { imagen_id: imagenId },
+          authHeaders()
+        );
+        // recargar favoritos para obtener el id
+        loadFavoritos();
+      }
+    } catch (err) {
+      console.error("Error toggling favorito", err);
+      alert("No se pudo actualizar favorito");
     }
   }
 
@@ -410,6 +473,19 @@ function Galeria() {
                       >
                         Ver
                       </button>
+                      {user && (
+                        <button
+                          className={`btn btn-sm me-2 ${
+                            favoritos[img.id]
+                              ? "btn-warning"
+                              : "btn-outline-warning"
+                          }`}
+                          onClick={() => toggleFavorito(img.id)}
+                          aria-pressed={!!favoritos[img.id]}
+                        >
+                          {favoritos[img.id] ? "★ Favorito" : "☆ Favorito"}
+                        </button>
+                      )}
                       {isAdmin && (
                         <button
                           className="btn btn-outline-warning btn-sm me-2"

@@ -33,6 +33,12 @@ function Galeria() {
 
   // modal ver
   const [selectedIndex, setSelectedIndex] = useState(null);
+  // comentarios
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [pendingComments, setPendingComments] = useState([]);
+  const [loadingPending, setLoadingPending] = useState(false);
 
   // modal editar
   const [editData, setEditData] = useState({
@@ -101,6 +107,99 @@ function Galeria() {
     setSelectedIndex((i) => (i === 0 ? imagenes.length - 1 : i - 1));
   const nextImage = () =>
     setSelectedIndex((i) => (i === imagenes.length - 1 ? 0 : i + 1));
+
+  // cargar comentarios cuando se abre el modal de detalle
+  useEffect(() => {
+    if (selectedIndex === null) return;
+    const img = imagenes[selectedIndex];
+    if (!img) return;
+    loadComments(img.id);
+    // eslint-disable-next-line
+  }, [selectedIndex]);
+
+  async function loadComments(imagenId) {
+    try {
+      setLoadingComments(true);
+      const res = await axios.get(
+        `http://localhost:4000/api/comentarios/imagen/${imagenId}`
+      );
+      setComments(res.data || []);
+    } catch (err) {
+      console.error("Error cargando comentarios", err);
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+    // si es admin, cargar pendientes para esta imagen
+    if (isAdmin) {
+      try {
+        setLoadingPending(true);
+        const res2 = await axios.get(
+          "http://localhost:4000/api/comentarios/pendientes",
+          authHeaders()
+        );
+        const allPending = res2.data || [];
+        const filtered = allPending.filter((c) => c.imagen_id === imagenId);
+        setPendingComments(filtered);
+      } catch (err) {
+        console.error("Error cargando comentarios pendientes", err);
+        setPendingComments([]);
+      } finally {
+        setLoadingPending(false);
+      }
+    } else {
+      setPendingComments([]);
+    }
+  }
+
+  async function handleModerate(commentId, estado) {
+    if (!isAdmin)
+      return alert("Solo administradores pueden moderar comentarios.");
+    if (!window.confirm(`¿Confirmar ${estado} del comentario?`)) return;
+
+    try {
+      await axios.put(
+        `http://localhost:4000/api/comentarios/${commentId}`,
+        { estado },
+        authHeaders()
+      );
+      alert("Comentario actualizado correctamente");
+      // recargar listas para la imagen abierta
+      const img = imagenes[selectedIndex];
+      if (img) loadComments(img.id);
+    } catch (err) {
+      console.error("Error moderando comentario", err);
+      alert("No se pudo actualizar el comentario");
+    }
+  }
+
+  async function handleCommentSubmit(e) {
+    e.preventDefault();
+    if (!commentText || commentText.trim().length === 0)
+      return alert("Escribe un comentario antes de enviar.");
+    if (commentText.length > 250)
+      return alert("El comentario no puede superar 250 caracteres.");
+
+    const imagen = imagenes[selectedIndex];
+    if (!imagen) return;
+
+    try {
+      const payload = {
+        imagen_id: imagen.id,
+        contenido: commentText.trim(),
+      };
+      if (user && user.id) payload.usuario_id = user.id;
+
+      await axios.post("http://localhost:4000/api/comentarios", payload);
+      setCommentText("");
+      alert("Comentario enviado y pendiente de aprobación");
+      // recargar (solo se mostrarán los aprobados)
+      loadComments(imagen.id);
+    } catch (err) {
+      console.error("Error enviando comentario", err);
+      alert("No se pudo enviar el comentario");
+    }
+  }
 
   // ----------------- ELIMINAR -----------------
   async function handleDelete(id) {
@@ -365,6 +464,122 @@ function Galeria() {
                   <strong>Palabras clave:</strong>{" "}
                   {imagenes[selectedIndex].palabras_clave}
                 </p>
+
+                <hr />
+
+                <div>
+                  <h6>Comentarios</h6>
+
+                  {isAdmin && (
+                    <div className="mb-3">
+                      <h6>Comentarios pendientes</h6>
+                      {loadingPending ? (
+                        <p className="text-muted">
+                          Cargando comentarios pendientes...
+                        </p>
+                      ) : pendingComments.length === 0 ? (
+                        <p className="text-muted">
+                          No hay comentarios pendientes para esta imagen.
+                        </p>
+                      ) : (
+                        <div className="list-group mb-2">
+                          {pendingComments.map((c) => (
+                            <div key={c.id} className="list-group-item">
+                              <div className="d-flex w-100 justify-content-between">
+                                <strong>{c.usuario || "Anónimo"}</strong>
+                                <small className="text-muted">
+                                  {c.creado_en
+                                    ? new Date(c.creado_en).toLocaleString()
+                                    : ""}
+                                </small>
+                              </div>
+                              <p className="mb-2">{c.contenido}</p>
+                              <div className="d-flex gap-2">
+                                <button
+                                  className="btn btn-sm btn-success"
+                                  onClick={() =>
+                                    handleModerate(c.id, "aprobado")
+                                  }
+                                >
+                                  Aprobar
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() =>
+                                    handleModerate(c.id, "rechazado")
+                                  }
+                                >
+                                  Rechazar
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {loadingComments ? (
+                    <p className="text-muted">Cargando comentarios...</p>
+                  ) : comments.length === 0 ? (
+                    <p className="text-muted">
+                      Aún no hay comentarios aprobados.
+                    </p>
+                  ) : (
+                    <div className="list-group mb-3">
+                      {comments.map((c) => (
+                        <div key={c.id} className="list-group-item">
+                          <div className="d-flex w-100 justify-content-between">
+                            <strong>{c.usuario || "Anónimo"}</strong>
+                            <small className="text-muted">
+                              {c.creado_en
+                                ? new Date(c.creado_en).toLocaleString()
+                                : ""}
+                            </small>
+                          </div>
+                          <p className="mb-0">{c.contenido}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleCommentSubmit}>
+                    <label className="form-label">Dejar un comentario</label>
+                    {user ? (
+                      <div className="mb-2">
+                        <small className="text-muted">
+                          Comentando como {user.nombre}
+                        </small>
+                      </div>
+                    ) : (
+                      <div className="mb-2">
+                        <small className="text-muted">
+                          Puedes comentar como invitado; el comentario quedará
+                          pendiente de aprobación.
+                        </small>
+                      </div>
+                    )}
+
+                    <textarea
+                      className="form-control mb-2"
+                      rows={3}
+                      maxLength={250}
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Escribe tu comentario (máx. 250 caracteres)"
+                    />
+
+                    <div className="d-flex justify-content-end">
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={!commentText || commentText.trim() === ""}
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={prevImage}>

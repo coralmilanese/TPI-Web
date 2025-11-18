@@ -97,8 +97,11 @@ function Galeria() {
   }
 
   function authHeaders() {
-    return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const t = localStorage.getItem("token") || null;
+    return t ? { headers: { Authorization: `Bearer ${t}` } } : {};
   }
+
+  const [moderatingId, setModeratingId] = useState(null);
 
   // ----------------- VER / MODAL -----------------
   const openDetail = (index) => setSelectedIndex(index);
@@ -156,8 +159,8 @@ function Galeria() {
     if (!isAdmin)
       return alert("Solo administradores pueden moderar comentarios.");
     if (!window.confirm(`¿Confirmar ${estado} del comentario?`)) return;
-
     try {
+      setModeratingId(commentId);
       await axios.put(
         `http://localhost:4000/api/comentarios/${commentId}`,
         { estado },
@@ -170,6 +173,8 @@ function Galeria() {
     } catch (err) {
       console.error("Error moderando comentario", err);
       alert("No se pudo actualizar el comentario");
+    } finally {
+      setModeratingId(null);
     }
   }
 
@@ -500,16 +505,20 @@ function Galeria() {
                                   onClick={() =>
                                     handleModerate(c.id, "aprobado")
                                   }
+                                  disabled={moderatingId === c.id}
                                 >
-                                  Aprobar
+                                  {moderatingId === c.id && "Procesando..."}
+                                  {moderatingId !== c.id && "Aprobar"}
                                 </button>
                                 <button
                                   className="btn btn-sm btn-outline-danger"
                                   onClick={() =>
                                     handleModerate(c.id, "rechazado")
                                   }
+                                  disabled={moderatingId === c.id}
                                 >
-                                  Rechazar
+                                  {moderatingId === c.id && "Procesando..."}
+                                  {moderatingId !== c.id && "Rechazar"}
                                 </button>
                               </div>
                             </div>

@@ -8,7 +8,8 @@ export default function Home() {
   const [imagenes, setImagenes] = useState([]);
 
   // hero background: usa la última imagen subida si existe
-  const heroUrl = (imagenes && imagenes[0] && imagenes[0].url) ||
+  const heroUrl =
+    (imagenes && imagenes[0] && imagenes[0].url) ||
     "https://images.unsplash.com/photo-1520690214124-2d7f63e39b9a?auto=format&fit=crop&w=1600&q=60";
 
   useEffect(() => {
@@ -50,8 +51,10 @@ export default function Home() {
           color: "#fff",
         }}
       >
-
-        <div className="text-center" style={{ position: "relative", zIndex: 2, padding: '0 1rem' }}>
+        <div
+          className="text-center"
+          style={{ position: "relative", zIndex: 2, padding: "0 1rem" }}
+        >
           <h1
             className="fw-bold"
             style={{

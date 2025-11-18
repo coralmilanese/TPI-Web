@@ -7,6 +7,10 @@ export default function Home() {
   const navigate = useNavigate();
   const [imagenes, setImagenes] = useState([]);
 
+  // hero background: usa la última imagen subida si existe
+  const heroUrl = (imagenes && imagenes[0] && imagenes[0].url) ||
+    "https://images.unsplash.com/photo-1520690214124-2d7f63e39b9a?auto=format&fit=crop&w=1600&q=60";
+
   useEffect(() => {
     loadImagenes();
     // eslint-disable-next-line
@@ -32,31 +36,22 @@ export default function Home() {
     <>
       {/* HERO estilo museo */}
       <header
+        role="banner"
         className="d-flex align-items-center justify-content-center"
         style={{
+          minHeight: "56vh",
           height: "72vh",
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1520690214124-2d7f63e39b9a?auto=format&fit=crop&w=1600&q=60')",
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.25)), url('${heroUrl}')`,
           backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundPosition: "center center",
+          backgroundRepeat: "no-repeat",
+          transition: "background-image 300ms ease-in-out",
           position: "relative",
+          color: "#fff",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.32)",
-          }}
-        />
 
-        <div
-          className="text-center text-white"
-          style={{ position: "relative", zIndex: 2 }}
-        >
+        <div className="text-center" style={{ position: "relative", zIndex: 2, padding: '0 1rem' }}>
           <h1
             className="fw-bold"
             style={{

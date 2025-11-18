@@ -1,13 +1,29 @@
-const express = require("express");
+// backend/index.js
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
 const app = express();
-const cors = require("cors");
 
+// Middlewares
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-  res.send("Hola mundo desde el backend!");
+// Archivos estáticos
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Rutas
+app.get('/', (req, res) => {
+  res.json({ msg: "API funcionando" });
 });
 
-app.listen(3002, () => {
-  console.log("Escuchando en el puerto 3002");
-});
+app.use('/api/imagenes', require('./routes/imagenes'));
+app.use('/api/categorias', require('./routes/categorias'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/usuarios', require('./routes/usuarios'));
+app.use('/api/comentarios', require('./routes/comentarios')); // ← SOLO AQUÍ
+
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log("Backend corriendo en puerto", PORT));

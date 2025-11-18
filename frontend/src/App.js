@@ -7,7 +7,7 @@ import SubirImagen from "./Pages/SubirImagen";
 import Login from "./Pages/Login";
 import DetalleImagen from "./Pages/DetalleImagen"; // si lo usas
 
-import Layout from "./components/layout";
+import Layout from "./Components/layout";
 
 function App() {
   return (

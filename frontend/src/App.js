@@ -8,6 +8,7 @@ import Login from "./Pages/Login";
 import DetalleImagen from "./Pages/DetalleImagen"; // si lo usas
 
 import Layout from "./Components/layout";
+import Registrarse from "./Pages/Registrarse";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/galeria" element={<Galeria />} />
           <Route path="/subir-imagen" element={<SubirImagen />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/registrarse" element={<Registrarse />} />
           <Route path="/detalle" element={<DetalleImagen />} />
 
           <Route path="*" element={<h1>404 - Página no encontrada</h1>} />

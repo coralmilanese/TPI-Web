@@ -46,6 +46,3 @@ INSERT INTO categorias (nombre) VALUES
 ('Arte Digital'),
 ('Escultura'),
 ('Arquitectura');
-
-NSERT INTO usuarios (nombre, email, password, rol) VALUES
-('Administrador', 'admin@museo.com', 'admin123', 'admin')

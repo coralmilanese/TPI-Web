@@ -62,9 +62,7 @@ router.post("/login", async (req, res) => {
 
     const user = rows[0];
 
-    //const ok = await bcrypt.compare(password, user.password);
-
-    var ok = password == user.password;
+    const ok = await bcrypt.compare(password, user.password);
 
     if (!ok) return res.status(401).json({ error: "Contraseña incorrecta" });
 

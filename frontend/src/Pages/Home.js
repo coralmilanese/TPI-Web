@@ -1,201 +1,392 @@
-// src/Pages/Home.js
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// src/Pages/Home.js 
+import React, { useEffect, useRef, useState } from "react";
+import "./home-advanced.css";
+
+
+import HERO_MUSEO from "../assets/img/MUSEOPRINCIPAL.jpg";
+import OBRA_DESTACADA from "../assets/img/OBRADESTACADA.jpg";
+
+import EXPO_1 from "../assets/img/OBRA1.jpg";
+import EXPO_2 from "../assets/img/OBRA2.jpg";
+import EXPO_3 from "../assets/img/OBRA3.jpg";
+
+import ARTISTA_1 from "../assets/img/ESCULTORJORGEMARIN.jpg";
+import ARTISTA_2 from "../assets/img/PINTORGUILLERMOAROLA.jpg";
+
+import ARTISTA_3 from "../assets/img/PABLOPICASO.webp";
+
+import CAROUSEL_1 from "../assets/img/MUSEO1.webp";
+import CAROUSEL_2 from "../assets/img/MUSEO2.webp";
+import CAROUSEL_3 from "../assets/img/MUSEO3.webp";
 
 export default function Home() {
-  const navigate = useNavigate();
-  const [imagenes, setImagenes] = useState([]);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
-  // hero background: usa la última imagen subida si existe
-  const heroUrl =
-    (imagenes && imagenes[0] && imagenes[0].url) ||
-    "https://images.unsplash.com/photo-1520690214124-2d7f63e39b9a?auto=format&fit=crop&w=1600&q=60";
+  const carouselImgs = [CAROUSEL_1, CAROUSEL_2, CAROUSEL_3];
 
+  /* ---------------------------
+     AUTO-ROTATE CAROUSEL
+  ----------------------------*/
   useEffect(() => {
-    loadImagenes();
-    // eslint-disable-next-line
+    const t = setInterval(() => {
+      setCarouselIndex((i) => (i + 1) % carouselImgs.length);
+    }, 5000);
+    return () => clearInterval(t);
+  }, [carouselImgs.length]);
+
+  /* ---------------------------
+     ANIMACIONES SCROLL (REVEAL)
+  ----------------------------*/
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add("is-visible");
+        });
+      },
+      { threshold: 0.18 }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
   }, []);
 
-  async function loadImagenes() {
-    try {
-      const res = await axios.get("http://localhost:4000/api/imagenes");
-      const data = res.data || [];
-      // tomar las últimas 6 imágenes (si existen), ordenadas por fecha si viene
-      const sorted = data.slice().sort((a, b) => {
-        const da = new Date(a.creado_en || a.created_at || 0).getTime();
-        const db = new Date(b.creado_en || b.created_at || 0).getTime();
-        return db - da;
+  /* ---------------------------
+     PARTICULAS HERO
+  ----------------------------*/
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let w = (canvas.width = canvas.offsetWidth);
+    let h = (canvas.height = canvas.offsetHeight);
+
+    const particles = [];
+    const count = Math.max(12, Math.floor(w / 120));
+
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 0.8 + Math.random() * 2.2,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -0.1 - Math.random() * 0.2,
+        alpha: 0.08 + Math.random() * 0.12,
       });
-      setImagenes(sorted.slice(0, 6));
-    } catch (err) {
-      console.error("Error cargando imágenes en Home", err);
     }
-  }
+
+    let raf;
+    function resize() {
+      w = canvas.width = canvas.offsetWidth;
+      h = canvas.height = canvas.offsetHeight;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < -10) {
+          p.y = h + 10;
+          p.x = Math.random() * w;
+        }
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(draw);
+    }
+
+    window.addEventListener("resize", resize);
+    draw();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  /* ---------------------------
+     3D CARD INTERACTION
+  ----------------------------*/
+  const cardRef = useRef(null);
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    function onMove(e) {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      const rx = (y - 0.5) * 8;
+      const ry = (x - 0.5) * -12;
+      el.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
+    }
+    function onLeave() {
+      el.style.transform = "rotateX(0) rotateY(0) scale(1)";
+    }
+
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  /* ---------------------------
+     BOTÓN SCROLL TOP
+  ----------------------------*/
+  useEffect(() => {
+    const handleScroll = () => setShowScrollButton(window.scrollY > 300);
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
-      {/* HERO estilo museo */}
-      <header
-        role="banner"
-        className="d-flex align-items-center justify-content-center"
-        style={{
-          minHeight: "56vh",
-          height: "72vh",
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.25)), url('${heroUrl}')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center center",
-          backgroundRepeat: "no-repeat",
-          transition: "background-image 300ms ease-in-out",
-          position: "relative",
-          color: "#fff",
-        }}
-      >
+      {/* =====================================
+          HERO PROFESIONAL
+      ====================================== */}
+      <header className="home-hero" role="banner">
         <div
-          className="text-center"
-          style={{ position: "relative", zIndex: 2, padding: "0 1rem" }}
+          className="hero-bg"
+          style={{
+            backgroundImage: `url(${HERO_MUSEO})`,
+          }}
+        />
+
+        <video
+          className="hero-video"
+          playsInline
+          autoPlay
+          muted
+          loop
         >
-          <h1
-            className="fw-bold"
-            style={{
-              fontSize: "3.4rem",
-              letterSpacing: "3px",
-              textShadow: "0 4px 10px rgba(0,0,0,0.45)",
-            }}
-          >
-            Museo Digital
-          </h1>
+          <source
+            src="https://cdn.coverr.co/videos/coverr-museums-ongoing-1593?token=eyJhbGciOiJIUzI1NiJ9"
+            type="video/mp4"
+          />
+        </video>
 
-          <p className="mt-3" style={{ fontSize: "1.15rem", opacity: 0.95 }}>
-            Donde el arte se encuentra con la tecnología.
-          </p>
+        <canvas className="hero-canvas" ref={canvasRef} />
 
-          <div className="mt-4 d-flex justify-content-center gap-3">
-            <button
-              className="btn btn-outline-light btn-lg px-4"
-              onClick={() => navigate("/galeria")}
-            >
-              Explorar Galería
-            </button>
-
-            {/* 🔥 NUEVO BOTÓN — sin romper diseño */}
-            <button
-              className="btn btn-outline-light btn-lg px-4"
-              onClick={() => navigate("/subir-imagen")}
-            >
-              Subir Imagen
-            </button>
-
-            <button
-              className="btn btn-light btn-lg px-4"
-              onClick={() => navigate("/login")}
-            >
-              Ingresar
-            </button>
+        <div className="hero-inner container">
+          <div className="hero-left reveal">
+            <h1 className="hero-title">Museo Digital</h1>
+            <p className="hero-sub">
+              Arte, historia y tecnología; una experiencia inmersiva y curada.
+            </p>
           </div>
+
+          <aside className="hero-card reveal" ref={cardRef}>
+            <div className="card-media">
+              <img src={OBRA_DESTACADA} alt="Obra destacada" />
+            </div>
+            <div className="card-body">
+              <h3>Obra Destacada</h3>
+              <p className="muted">Autor desconocido — c. 1920</p>
+              <p className="small">
+                Una pieza representativa de la colección, disponible en HD.
+              </p>
+            </div>
+          </aside>
         </div>
       </header>
 
-      {/* Carrusel con imágenes subidas */}
-      <section className="container my-5">
-        {imagenes.length === 0 ? (
-          <div className="text-center py-5">
-            <p className="text-muted">Aún no hay imágenes para mostrar.</p>
+      {/* NAV LOCAL */}
+      <nav className="quick-nav">
+        <a href="#exposiciones">Exposiciones</a>
+        <a href="#artistas">Artistas</a>
+        <a href="#recorrido">Recorrido</a>
+        <a href="#visitanos">Visítanos</a>
+      </nav>
+
+      {/* BOTÓN SCROLL TOP */}
+      <button
+        className={`scroll-top-btn ${showScrollButton ? "show" : ""}`}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      >
+        ↑
+      </button>
+
+      {/* ===================
+          EXPOSICIONES
+      ==================== */}
+      <section id="exposiciones" className="section reveal">
+        <div className="container">
+          <header className="section-head">
+            <h2>Exposiciones actuales</h2>
+            <p className="muted">Curaduría seleccionada por expertos</p>
+          </header>
+
+          <div className="exhibitions-grid">
+            <article className="exhibit-card">
+              <div className="exhibit-media">
+                <img src={EXPO_1} alt="Exposición 1" />
+              </div>
+              <div className="exhibit-body">
+                <h3>Rostros del Tiempo</h3>
+                <p className="small muted">Retratos desde 1800 a la fecha.</p>
+              </div>
+            </article>
+
+            <article className="exhibit-card">
+              <div className="exhibit-media">
+                <img src={EXPO_2} alt="Exposición 2" />
+              </div>
+              <div className="exhibit-body">
+                <h3>Figuras Modernas</h3>
+                <p className="small muted">Obras icónicas del siglo XX.</p>
+              </div>
+            </article>
+
+            <article className="exhibit-card">
+              <div className="exhibit-media">
+                <img src={EXPO_3} alt="Exposición 3" />
+              </div>
+              <div className="exhibit-body">
+                <h3>Digital &amp; Media</h3>
+                <p className="small muted">
+                  Prácticas experimentales contemporáneas.
+                </p>
+              </div>
+            </article>
           </div>
-        ) : (
-          <div
-            id="homeCarousel"
-            className="carousel slide"
-            data-bs-ride="carousel"
-          >
-            <div className="carousel-indicators">
-              {imagenes.map((_, i) => (
-                <button
+        </div>
+      </section>
+
+      {/* ===================
+          ARTISTAS
+      ==================== */}
+      <section id="artistas" className="dark-section reveal">
+        <div className="container">
+          <header className="section-head white">
+            <h2>Artistas destacados</h2>
+          </header>
+
+          <div className="artists-row">
+            <figure className="artist-card">
+              <img src={ARTISTA_1} alt="Artista 1" />
+              <figcaption>
+                <strong>Jorge Marín</strong>
+                <span className="muted">Escultor</span>
+              </figcaption>
+            </figure>
+
+            <figure className="artist-card">
+              <img src={ARTISTA_2} alt="Artista 2" />
+              <figcaption>
+                <strong>Guillermo Marola</strong>
+                <span className="muted">Pintor</span>
+              </figcaption>
+            </figure>
+
+            <figure className="artist-card">
+              <img src={ARTISTA_3} alt="Artista 3" />
+              <figcaption>
+                <strong>Pablo Picasso</strong>
+                <span className="muted">Artista legendario</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================
+          TIMELINE + 3D
+      ==================== */}
+      <section id="recorrido" className="section reveal">
+        <div className="container split-grid">
+          <div>
+            <h2>Línea del tiempo</h2>
+            <ol className="timeline-list">
+              <li><strong>1985</strong> Fundación y primeras donaciones.</li>
+              <li><strong>1998</strong> Inicio digitalización.</li>
+              <li><strong>2010</strong> Primer recorrido 360° web.</li>
+              <li><strong>2024</strong> Plataforma interactiva.</li>
+            </ol>
+          </div>
+
+          <div>
+            <h2>Visualización 3D</h2>
+            <div className="viewer-card">
+              <img src={OBRA_DESTACADA} alt="Vista 3D" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================
+          CAROUSEL
+      ==================== */}
+      <section className="section reveal">
+        <div className="container">
+          <h2>Recorrido destacado</h2>
+
+          <div className="carousel-wrap">
+            <div className="carousel-viewport" aria-roledescription="carousel">
+              {carouselImgs.map((src, i) => (
+                <img
                   key={i}
-                  type="button"
-                  data-bs-target="#homeCarousel"
-                  data-bs-slide-to={i}
-                  className={i === 0 ? "active" : ""}
-                  aria-current={i === 0 ? "true" : undefined}
-                  aria-label={`Slide ${i + 1}`}
+                  src={src}
+                  alt={`Slide ${i}`}
+                  className={`carousel-slide ${i === carouselIndex ? "active" : ""}`}
                 />
               ))}
             </div>
 
-            <div
-              className="carousel-inner rounded shadow-sm"
-              style={{ overflow: "hidden" }}
-            >
-              {imagenes.map((img, i) => (
-                <div
-                  key={img.id || i}
-                  className={`carousel-item ${i === 0 ? "active" : ""}`}
-                >
-                  <img
-                    src={img.url}
-                    className="d-block w-100"
-                    alt={img.titulo || `Imagen ${i + 1}`}
-                    style={{ maxHeight: "420px", objectFit: "cover" }}
-                  />
-                  {img.titulo && (
-                    <div className="carousel-caption d-none d-md-block bg-dark bg-opacity-25 rounded px-3 py-2">
-                      <h5 className="m-0">{img.titulo}</h5>
-                      {img.autor && (
-                        <small className="text-white-50">{img.autor}</small>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="carousel-controls">
+              <button onClick={() =>
+                setCarouselIndex((i) => (i - 1 + carouselImgs.length) % carouselImgs.length)
+              }>‹</button>
+
+              <button onClick={() =>
+                setCarouselIndex((i) => (i + 1) % carouselImgs.length)
+              }>›</button>
             </div>
-
-            <button
-              className="carousel-control-prev"
-              type="button"
-              data-bs-target="#homeCarousel"
-              data-bs-slide="prev"
-            >
-              <span
-                className="carousel-control-prev-icon"
-                aria-hidden="true"
-              ></span>
-              <span className="visually-hidden">Anterior</span>
-            </button>
-            <button
-              className="carousel-control-next"
-              type="button"
-              data-bs-target="#homeCarousel"
-              data-bs-slide="next"
-            >
-              <span
-                className="carousel-control-next-icon"
-                aria-hidden="true"
-              ></span>
-              <span className="visually-hidden">Siguiente</span>
-            </button>
           </div>
-        )}
+        </div>
       </section>
 
-      {/* Info */}
-      <section className="container text-center py-5">
-        <h2 className="fw-bold mb-3" style={{ fontSize: "2rem" }}>
-          Una experiencia curada
-        </h2>
+      {/* ===================
+          VISÍTANOS + MAPA
+      ==================== */}
+      <section id="visitanos" className="dark-section reveal">
+        <div className="container split-grid">
+          <div>
+            <h2>Visítanos</h2>
+            <p className="muted">Av. Cultura 2145 – Lun a Sab 10:00–19:00</p>
+            <p className="muted">Email: contacto@museodigital.ar</p>
+          </div>
 
-        <p
-          style={{
-            maxWidth: "760px",
-            margin: "0 auto",
-            color: "#444",
-            lineHeight: 1.7,
-          }}
-        >
-          Nuestro museo digital ofrece colecciones seleccionadas, navegación
-          clara y una experiencia de visualización profesional para todo
-          público.
-        </p>
+          <div>
+            <iframe
+              width="100%"
+              height="260"
+              style={{ border: 0, borderRadius: 10 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3202.3202207530057!2d-64.29524142386161!3d-36.61867797229948!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95c2cd08581d0253%3A0x1f259074626aff70!2sMuseo%20Provincial%20de%20Historia%20Natural!5e0!3m2!1ses-419!2sar!4v1763529134176!5m2!1ses-419!2sar"
+            ></iframe>
+          </div>
+        </div>
       </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="container footer-grid">
+          <div>
+            <strong>Museo Digital</strong>
+            <p className="muted">Proyecto integrador · 2025</p>
+          </div>
+          <p className="muted small">© 2025 - Todos los derechos reservados</p>
+        </div>
+      </footer>
     </>
   );
 }

@@ -1,0 +1,287 @@
+/* src/Pages/home-advanced.css */
+/* ================================
+   VARIABLES GLOBALES
+================================ */
+:root {
+  --bg: #0b0b0b;
+  --panel: #0f1113;
+  --muted: #bfc6c9;
+  --accent: #8be9fd;
+  --accentSoft: rgba(139, 233, 253, 0.15);
+  --glass: rgba(255, 255, 255, 0.04);
+  --shadow: 0 8px 30px rgba(2, 6, 23, 0.7);
+  --radius: 12px;
+  --gap: 18px;
+  --container: 1200px;
+  --transition: 0.35s ease;
+}
+
+/* ================================
+   GLOBAL
+================================ */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #eee;
+  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+.container { max-width: var(--container); margin: 0 auto; padding: 0 18px; }
+
+/* ================================
+   HERO
+================================ */
+.home-hero {
+  position: relative;
+  min-height: 75vh;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  overflow: hidden;
+  perspective: 1000px;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+  filter: grayscale(15%) contrast(0.9) brightness(0.55);
+  transform: scale(1.08);
+  transition: transform 6s linear;
+}
+.home-hero:hover .hero-bg { transform: scale(1.1); }
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.15;
+}
+
+.hero-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+
+.hero-inner {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  padding: 48px 0;
+}
+
+/* Left Text */
+.hero-left { flex: 1; max-width: 720px; animation: fadeSlideDown 1s ease; }
+.hero-title { font-size: 46px; margin: 0 0 12px; letter-spacing: 1px; line-height: 1.05; }
+.hero-sub { color: var(--muted); font-size: 1.1rem; margin-bottom: 18px; }
+
+/* Hero Card */
+.hero-card {
+  width: 340px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.hero-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.55); }
+
+.card-media img { width: 100%; height: 220px; object-fit: cover; display:block; }
+
+/* ================================
+   EXHIBIT MEDIA: evitar crop (NUEVO)
+   - las tarjetas mantendrán un área fija,
+     pero la imagen se escala por completo (contain)
+================================ */
+.exhibit-media {
+  width: 100%;
+  height: 220px;               /* área visual constante */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.06));
+  overflow: hidden;
+}
+.exhibit-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;         /* <- muestra la imagen completa sin recorte */
+  display: block;
+}
+
+/* ================================
+   QUICK NAV
+================================ */
+.quick-nav {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 18px auto 8px;
+  padding: 12px 0;
+}
+.quick-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: transparent;
+  transition: var(--transition);
+}
+.quick-nav a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+/* ================================
+   SCROLL TOP BUTTON
+================================ */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 26px;
+  right: 26px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.4rem;
+  font-weight: bold;
+  cursor: pointer;
+  background: linear-gradient(145deg, #8be9fd, #6ad7ff);
+  color: #041018;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(15px);
+  transition: all 0.35s ease;
+}
+.scroll-top-btn.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.scroll-top-btn:hover { transform: scale(1.08); }
+
+/* ================================
+   SECTIONS
+================================ */
+.section { padding: 70px 0; }
+.section-head { margin-bottom: 28px; }
+.section-head h2 { font-size: 1.9rem; margin: 0; }
+.muted { color: var(--muted); }
+.white .muted { color: rgba(255,255,255,0.7); }
+
+/* ================================
+   EXHIBITIONS GRID
+================================ */
+.exhibitions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.exhibit-card {
+  background: var(--panel);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform var(--transition);
+}
+.exhibit-card:hover { transform: translateY(-6px); }
+.exhibit-body { padding: 14px; }
+.btn-link { color: var(--accent); text-decoration: none; font-weight: 600; transition: var(--transition); }
+
+/* ================================
+   ARTISTS
+================================ */
+.artists-row { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+.artist-card { width:200px; text-align:center; background:var(--panel); border-radius:12px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.45); cursor:pointer; transition:var(--transition); }
+.artist-card:hover { transform: translateY(-6px); }
+.artist-card img { width:100%; height:150px; object-fit:cover; display:block; }
+.artist-card figcaption { padding:10px; }
+
+/* ================================
+   TIMELINE & VIEWER
+================================ */
+.split-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+.timeline-list { list-style:none; padding:0; }
+.timeline-list li { padding:14px 0; border-bottom:1px dashed rgba(255,255,255,0.05); color:var(--muted); font-size:1rem; }
+
+.viewer-card { background: var(--panel); border-radius:12px; overflow:hidden; box-shadow:var(--shadow); }
+.viewer-card img { width:100%; height:220px; object-fit:contain; display:block; }
+
+/* ================================
+   CAROUSEL (SLIDES sin recorte)
+   - ahora las slides son centradas y contain
+================================ */
+.carousel-wrap { margin-top:18px; position:relative; }
+.carousel-viewport {
+  height: 320px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #050505;
+  box-shadow: var(--shadow);
+
+  display: flex;                /* centra slides */
+  align-items: center;
+  justify-content: center;
+}
+.carousel-slide {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;          /* <- muestra imagen completa */
+  opacity: 0;
+  transform: scale(1.02);
+  transition: all 0.6s ease;
+  display: block;
+}
+.carousel-slide.active { opacity: 1; transform: scale(1); }
+
+.carousel-controls {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+}
+.carousel-controls button { background: rgba(0,0,0,0.45); border:none; color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; }
+
+/* dots (if you add them later) */
+.carousel-dots { display:flex; justify-content:center; gap:8px; margin-top:12px; }
+.dot { width:10px; height:10px; border-radius:50%; border:none; cursor:pointer; background:rgba(255,255,255,0.15); transition:var(--transition); }
+.dot.active { background:var(--accent); }
+
+/* ================================
+   DARK SECTION + FOOTER
+================================ */
+.dark-section { background: linear-gradient(180deg,#060606,#0b0b0b); padding:60px 0; }
+.footer { padding:34px 0; border-top:1px solid rgba(255,255,255,0.08); margin-top:28px; }
+.footer-grid { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+
+/* ================================
+   REVEAL ANIMATION
+================================ */
+.reveal { opacity:0; transform:translateY(10px); transition:0.8s ease; }
+.reveal.is-visible { opacity:1; transform:translateY(0); }
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 900px) {
+  .hero-inner { flex-direction:column; align-items:flex-start; gap:20px; }
+  .hero-card { width:100%; }
+  .split-grid { grid-template-columns:1fr; }
+  .carousel-viewport { height:220px; }
+  .carousel-slide { height:auto; max-height:220px; }
+  .exhibit-media { height:160px; }
+  .card-media img { height:180px; object-fit:cover; }
+}
+
+/* ================================
+   KEYFRAMES
+================================ */
+@keyframes fadeSlideDown {
+  from { opacity:0; transform:translateY(-12px); }
+  to { opacity:1; transform:translateY(0); }
+}

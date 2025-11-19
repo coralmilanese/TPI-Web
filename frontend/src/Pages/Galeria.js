@@ -39,6 +39,9 @@ function Galeria() {
   const [loadingComments, setLoadingComments] = useState(false);
   const [pendingComments, setPendingComments] = useState([]);
   const [loadingPending, setLoadingPending] = useState(false);
+  // favoritos
+  const [favoritos, setFavoritos] = useState({}); // mapa imagen_id -> favorito.id
+  const [loadingFavoritos, setLoadingFavoritos] = useState(false);
 
   // modal editar
   const [editData, setEditData] = useState({
@@ -58,6 +61,13 @@ function Galeria() {
     loadImagenes();
     // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    // cargar favoritos si hay usuario
+    if (user) loadFavoritos();
+    else setFavoritos({});
+    // eslint-disable-next-line
+  }, [user]);
 
   useEffect(() => {
     const t = setTimeout(() => loadImagenes(), 250);
@@ -83,6 +93,27 @@ function Galeria() {
     }
   }
 
+  async function loadFavoritos() {
+    try {
+      setLoadingFavoritos(true);
+      const res = await axios.get(
+        "http://localhost:4000/api/favoritos",
+        authHeaders()
+      );
+      const rows = res.data || [];
+      const map = {};
+      rows.forEach((r) => {
+        if (r.imagen_id) map[r.imagen_id] = r.id;
+      });
+      setFavoritos(map);
+    } catch (err) {
+      console.error("Error cargando favoritos", err);
+      setFavoritos({});
+    } finally {
+      setLoadingFavoritos(false);
+    }
+  }
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((f) => ({ ...f, [name]: value, page: 1 }));
@@ -97,8 +128,11 @@ function Galeria() {
   }
 
   function authHeaders() {
-    return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const t = localStorage.getItem("token") || null;
+    return t ? { headers: { Authorization: `Bearer ${t}` } } : {};
   }
+
+  const [moderatingId, setModeratingId] = useState(null);
 
   // ----------------- VER / MODAL -----------------
   const openDetail = (index) => setSelectedIndex(index);
@@ -156,8 +190,8 @@ function Galeria() {
     if (!isAdmin)
       return alert("Solo administradores pueden moderar comentarios.");
     if (!window.confirm(`¿Confirmar ${estado} del comentario?`)) return;
-
     try {
+      setModeratingId(commentId);
       await axios.put(
         `http://localhost:4000/api/comentarios/${commentId}`,
         { estado },
@@ -170,6 +204,8 @@ function Galeria() {
     } catch (err) {
       console.error("Error moderando comentario", err);
       alert("No se pudo actualizar el comentario");
+    } finally {
+      setModeratingId(null);
     }
   }
 
@@ -216,6 +252,38 @@ function Galeria() {
     } catch (err) {
       console.error("Error eliminando imagen", err);
       alert("No se pudo eliminar la imagen");
+    }
+  }
+
+  // Toggle favorito: si existe en favorites -> DELETE, else POST
+  async function toggleFavorito(imagenId) {
+    if (!user) return alert("Debes iniciar sesión para guardar favoritos");
+    try {
+      // si ya está favorito
+      if (favoritos[imagenId]) {
+        // eliminar
+        await axios.delete(
+          `http://localhost:4000/api/favoritos/imagen/${imagenId}`,
+          authHeaders()
+        );
+        setFavoritos((prev) => {
+          const copy = { ...prev };
+          delete copy[imagenId];
+          return copy;
+        });
+      } else {
+        // agregar
+        await axios.post(
+          "http://localhost:4000/api/favoritos",
+          { imagen_id: imagenId },
+          authHeaders()
+        );
+        // recargar favoritos para obtener el id
+        loadFavoritos();
+      }
+    } catch (err) {
+      console.error("Error toggling favorito", err);
+      alert("No se pudo actualizar favorito");
     }
   }
 
@@ -405,6 +473,19 @@ function Galeria() {
                       >
                         Ver
                       </button>
+                      {user && (
+                        <button
+                          className={`btn btn-sm me-2 ${
+                            favoritos[img.id]
+                              ? "btn-warning"
+                              : "btn-outline-warning"
+                          }`}
+                          onClick={() => toggleFavorito(img.id)}
+                          aria-pressed={!!favoritos[img.id]}
+                        >
+                          {favoritos[img.id] ? "★ Favorito" : "☆ Favorito"}
+                        </button>
+                      )}
                       {isAdmin && (
                         <button
                           className="btn btn-outline-warning btn-sm me-2"
@@ -500,16 +581,20 @@ function Galeria() {
                                   onClick={() =>
                                     handleModerate(c.id, "aprobado")
                                   }
+                                  disabled={moderatingId === c.id}
                                 >
-                                  Aprobar
+                                  {moderatingId === c.id && "Procesando..."}
+                                  {moderatingId !== c.id && "Aprobar"}
                                 </button>
                                 <button
                                   className="btn btn-sm btn-outline-danger"
                                   onClick={() =>
                                     handleModerate(c.id, "rechazado")
                                   }
+                                  disabled={moderatingId === c.id}
                                 >
-                                  Rechazar
+                                  {moderatingId === c.id && "Procesando..."}
+                                  {moderatingId !== c.id && "Rechazar"}
                                 </button>
                               </div>
                             </div>

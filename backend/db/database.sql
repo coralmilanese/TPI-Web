@@ -40,6 +40,16 @@ CREATE TABLE comentarios (
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 );
 
+CREATE TABLE favoritos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT NOT NULL,
+  imagen_id INT NOT NULL,
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_usuario_imagen (usuario_id, imagen_id),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (imagen_id) REFERENCES imagenes(id) ON DELETE CASCADE
+);
+
 INSERT INTO categorias (nombre) VALUES
 ('Pintura'),
 ('Fotografía'),
@@ -47,5 +57,5 @@ INSERT INTO categorias (nombre) VALUES
 ('Escultura'),
 ('Arquitectura');
 
-INSERT INTO usuarios (nombre, email, password, rol) VALUES
+NSERT INTO usuarios (nombre, email, password, rol) VALUES
 ('Administrador', 'admin@museo.com', 'admin123', 'admin')

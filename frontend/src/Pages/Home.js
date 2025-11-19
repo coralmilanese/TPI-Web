@@ -196,6 +196,15 @@ export default function Home() {
           público.
         </p>
       </section>
+      <div className="w-full flex justify-center">
+        <video
+          src="/videos/competencia.mp4"
+          loop="true"
+          className="w-1/2 h-auto"
+          autoplay
+          controls
+        ></video>
+      </div>
     </>
   );
 }

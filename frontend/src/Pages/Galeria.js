@@ -378,14 +378,53 @@ function Galeria() {
             <Cargador text="No hay imágenes." />
           </div>
         )}
-        {imagenes
-          .filter((imagen) => {
-            return imagen.autor.includes(filters.autor) &&
-              filters.categoria !== ""
-              ? imagen.categoria_id === parseInt(filters.categoria)
-              : true;
-          })
-          .map((img, idx) => (
+        {(() => {
+          const autorFilter = (filters.autor || "").trim().toLowerCase();
+          const qFilter = (filters.q || "").trim().toLowerCase();
+          const catFilter = filters.categoria
+            ? parseInt(filters.categoria)
+            : null;
+          const from = filters.date_from ? new Date(filters.date_from) : null;
+          const to = filters.date_to ? new Date(filters.date_to) : null;
+
+          const filtered = imagenes.filter((img) => {
+            // filtro por autor
+            if (autorFilter) {
+              const autor = (img.autor || "").toLowerCase();
+              if (!autor.includes(autorFilter)) return false;
+            }
+
+            // filtro por categoría
+            if (catFilter) {
+              const imgCat =
+                img.categoria_id != null ? parseInt(img.categoria_id) : null;
+              if (imgCat !== catFilter) return false;
+            }
+
+            // filtro de búsqueda general (título, descripción, palabras clave, autor)
+            if (qFilter) {
+              const hay = [
+                img.titulo,
+                img.descripcion,
+                img.palabras_clave,
+                img.autor,
+              ]
+                .map((s) => (s || "").toLowerCase())
+                .some((s) => s.includes(qFilter));
+              if (!hay) return false;
+            }
+
+            // filtro por fecha
+            if (from || to) {
+              const creado = img.creado_en ? new Date(img.creado_en) : null;
+              if (from && creado && creado < from) return false;
+              if (to && creado && creado > to) return false;
+            }
+
+            return true;
+          });
+
+          return filtered.map((img, idx) => (
             <div
               key={img.id}
               className="col-12 col-sm-6 col-md-4 col-lg-3 mb-4"
@@ -401,7 +440,8 @@ function Galeria() {
                 user={user}
               />
             </div>
-          ))}
+          ));
+        })()}
       </div>
 
       {/* MODAL VER */}

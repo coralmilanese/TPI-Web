@@ -1,7 +1,15 @@
 // frontend/src/Pages/Galeria.js
 import React, { useEffect, useState } from "react";
-import Image3DViewer from "../Components/Image3DViewer";
-import Image3DWebGL from "../Components/Image3DWebGL";
+import TarjetaImagen from "../Components/TarjetaImagen";
+import FiltrosGaleria from "../Components/FiltrosGaleria";
+import ModalDetalleImagen from "../Components/ModalDetalleImagen";
+import ListaComentarios from "../Components/ListaComentarios";
+import FormComentario from "../Components/FormComentario";
+import ListaComentariosPendientes from "../Components/ListaComentariosPendientes";
+import ModalEditarImagen from "../Components/ModalEditarImagen";
+// import FavoriteButton from "../Components/FavoriteButton";
+import BarraUsuario from "../Components/BarraUsuario";
+import Cargador from "../Components/Cargador";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -44,7 +52,7 @@ function Galeria() {
   const [loadingPending, setLoadingPending] = useState(false);
   // favoritos
   const [favoritos, setFavoritos] = useState({}); // mapa imagen_id -> favorito.id
-  const [loadingFavoritos, setLoadingFavoritos] = useState(false);
+  // const [loadingFavoritos, setLoadingFavoritos] = useState(false);
 
   // modal editar
   const [editData, setEditData] = useState({
@@ -98,7 +106,7 @@ function Galeria() {
 
   async function loadFavoritos() {
     try {
-      setLoadingFavoritos(true);
+      // setLoadingFavoritos(true);
       const res = await axios.get(
         "http://localhost:4000/api/favoritos",
         authHeaders()
@@ -113,7 +121,7 @@ function Galeria() {
       console.error("Error cargando favoritos", err);
       setFavoritos({});
     } finally {
-      setLoadingFavoritos(false);
+      // setLoadingFavoritos(false);
     }
   }
 
@@ -348,95 +356,26 @@ function Galeria() {
     <div className="container my-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1>Galería</h1>
-        <div>
-          {user ? (
-            <>
-              <span className="me-2">
-                Hola, {user.nombre} ({user.rol})
-              </span>
-              <button
-                className="btn btn-sm btn-outline-secondary me-2"
-                onClick={logout}
-              >
-                Cerrar sesión
-              </button>
-            </>
-          ) : (
-            <button
-              className="btn btn-sm btn-primary"
-              onClick={() => navigate("/login")}
-            >
-              Iniciar sesión
-            </button>
-          )}
-        </div>
+        <BarraUsuario
+          user={user}
+          onLogout={logout}
+          onLogin={() => navigate("/login")}
+          onRegister={() => navigate("/register")}
+        />
       </div>
 
       {/* FILTROS */}
-      <form className="row g-2 mb-3" onSubmit={(e) => e.preventDefault()}>
-        <div className="col-md-3">
-          <label className="form-label">Categoría</label>
-          <select
-            name="categoria"
-            className="form-select"
-            value={filters.categoria}
-            onChange={handleFilterChange}
-          >
-            <option value="">Todas</option>
-            {categorias.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="col-md-3">
-          <label className="form-label">Autor</label>
-          <input
-            name="autor"
-            className="form-control"
-            value={filters.autor}
-            onChange={handleFilterChange}
-          />
-        </div>
-
-        <div className="col-md-3">
-          <label className="form-label">Buscar</label>
-          <input
-            name="q"
-            className="form-control"
-            value={filters.q}
-            onChange={handleFilterChange}
-          />
-        </div>
-
-        <div className="col-md-3">
-          <label className="form-label">Fecha (desde / hasta)</label>
-          <div className="d-flex">
-            <input
-              type="date"
-              name="date_from"
-              className="form-control me-2"
-              value={filters.date_from}
-              onChange={handleFilterChange}
-            />
-            <input
-              type="date"
-              name="date_to"
-              className="form-control"
-              value={filters.date_to}
-              onChange={handleFilterChange}
-            />
-          </div>
-        </div>
-      </form>
+      <FiltrosGaleria
+        filters={filters}
+        categorias={categorias}
+        onChange={handleFilterChange}
+      />
 
       {/* GRID */}
       <div className="row">
         {imagenes.length === 0 && (
           <div className="col-12">
-            <p>No hay imágenes.</p>
+            <Cargador text="No hay imágenes." />
           </div>
         )}
         {imagenes
@@ -451,371 +390,74 @@ function Galeria() {
               key={img.id}
               className="col-12 col-sm-6 col-md-4 col-lg-3 mb-4"
             >
-              <div className="card h-100 shadow-sm">
-                <img
-                  src={img.url}
-                  alt={img.titulo}
-                  className="card-img-top"
-                  style={{
-                    objectFit: "cover",
-                    height: "180px",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => openDetail(idx)}
-                />
-                <div className="card-body">
-                  <h5 className="card-title">{img.titulo}</h5>
-                  <p>
-                    <strong>Autor:</strong> {img.autor || "Anónimo"}
-                  </p>
-                  <p>
-                    <strong>Categoría:</strong>{" "}
-                    {img.categoria || "Sin categoría"}
-                  </p>
-                  <p className="text-muted">{img.descripcion?.slice(0, 80)}</p>
-
-                  <div className="d-flex justify-content-between mt-2">
-                    <div>
-                      <button
-                        className="btn btn-outline-primary btn-sm me-2"
-                        onClick={() => openDetail(idx)}
-                      >
-                        Ver
-                      </button>
-                      {user && (
-                        <button
-                          className={`btn btn-sm me-2 ${
-                            favoritos[img.id]
-                              ? "btn-warning"
-                              : "btn-outline-warning"
-                          }`}
-                          onClick={() => toggleFavorito(img.id)}
-                          aria-pressed={!!favoritos[img.id]}
-                        >
-                          {favoritos[img.id] ? "★ Favorito" : "☆ Favorito"}
-                        </button>
-                      )}
-                      {isAdmin && (
-                        <button
-                          className="btn btn-outline-warning btn-sm me-2"
-                          onClick={() => openEditModal(img)}
-                        >
-                          Editar
-                        </button>
-                      )}
-                      {isAdmin && (
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => handleDelete(img.id)}
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </div>
-                    <small className="text-muted">
-                      {new Date(img.creado_en).toLocaleDateString()}
-                    </small>
-                  </div>
-                </div>
-              </div>
+              <TarjetaImagen
+                img={img}
+                onView={() => openDetail(idx)}
+                onFavorite={() => toggleFavorito(img.id)}
+                isFavorite={!!favoritos[img.id]}
+                isAdmin={isAdmin}
+                onEdit={() => openEditModal(img)}
+                onDelete={() => handleDelete(img.id)}
+                user={user}
+              />
             </div>
           ))}
       </div>
 
       {/* MODAL VER */}
       {selectedIndex !== null && (
-        <div className="modal show d-block">
-          <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {imagenes[selectedIndex].titulo}
-                </h5>
-                <button className="btn-close" onClick={closeDetail}></button>
-              </div>
-              <div className="modal-body">
-                {!show3D && (
-                  <img
-                    src={imagenes[selectedIndex].url}
-                    alt={imagenes[selectedIndex].titulo}
-                    className="img-fluid mb-3"
-                  />
-                )}
-                {show3D && (
-                  <div className="mb-3 d-flex justify-content-center">
-                    {/* prefer WebGL viewer (richer); fallback to CSS viewer if three.js not present */}
-                    <Image3DWebGL
-                      src={imagenes[selectedIndex].url}
-                      alt={imagenes[selectedIndex].titulo}
-                      style={{ width: "100%", maxWidth: 920 }}
-                    />
-                  </div>
-                )}
-                <p>
-                  <strong>Autor:</strong> {imagenes[selectedIndex].autor}
-                </p>
-                <p>
-                  <strong>Categoría:</strong>{" "}
-                  {imagenes[selectedIndex].categoria}
-                </p>
-                <p>
-                  <strong>Descripción:</strong>{" "}
-                  {imagenes[selectedIndex].descripcion}
-                </p>
-                <p>
-                  <strong>Palabras clave:</strong>{" "}
-                  {imagenes[selectedIndex].palabras_clave}
-                </p>
-
-                <hr />
-
-                <div className="mb-3 d-flex gap-2">
-                  <button
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() => setShow3D((s) => !s)}
-                  >
-                    {show3D ? "Volver a 2D" : "Ver en 3D"}
-                  </button>
-                  <small className="text-muted align-self-center">
-                    (Interacción: mover el cursor sobre la imagen)
-                  </small>
-                </div>
-
-                <div>
-                  <h6>Comentarios</h6>
-
-                  {isAdmin && (
-                    <div className="mb-3">
-                      <h6>Comentarios pendientes</h6>
-                      {loadingPending ? (
-                        <p className="text-muted">
-                          Cargando comentarios pendientes...
-                        </p>
-                      ) : pendingComments.length === 0 ? (
-                        <p className="text-muted">
-                          No hay comentarios pendientes para esta imagen.
-                        </p>
-                      ) : (
-                        <div className="list-group mb-2">
-                          {pendingComments.map((c) => (
-                            <div key={c.id} className="list-group-item">
-                              <div className="d-flex w-100 justify-content-between">
-                                <strong>{c.usuario || "Anónimo"}</strong>
-                                <small className="text-muted">
-                                  {c.creado_en
-                                    ? new Date(c.creado_en).toLocaleString()
-                                    : ""}
-                                </small>
-                              </div>
-                              <p className="mb-2">{c.contenido}</p>
-                              <div className="d-flex gap-2">
-                                <button
-                                  className="btn btn-sm btn-success"
-                                  onClick={() =>
-                                    handleModerate(c.id, "aprobado")
-                                  }
-                                  disabled={moderatingId === c.id}
-                                >
-                                  {moderatingId === c.id && "Procesando..."}
-                                  {moderatingId !== c.id && "Aprobar"}
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() =>
-                                    handleModerate(c.id, "rechazado")
-                                  }
-                                  disabled={moderatingId === c.id}
-                                >
-                                  {moderatingId === c.id && "Procesando..."}
-                                  {moderatingId !== c.id && "Rechazar"}
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {loadingComments ? (
-                    <p className="text-muted">Cargando comentarios...</p>
-                  ) : comments.length === 0 ? (
-                    <p className="text-muted">
-                      Aún no hay comentarios aprobados.
-                    </p>
-                  ) : (
-                    <div className="list-group mb-3">
-                      {comments.map((c) => (
-                        <div key={c.id} className="list-group-item">
-                          <div className="d-flex w-100 justify-content-between">
-                            <strong>{c.usuario || "Anónimo"}</strong>
-                            <small className="text-muted">
-                              {c.creado_en
-                                ? new Date(c.creado_en).toLocaleString()
-                                : ""}
-                            </small>
-                          </div>
-                          <p className="mb-0">{c.contenido}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleCommentSubmit}>
-                    <label className="form-label">Dejar un comentario</label>
-                    {user ? (
-                      <div className="mb-2">
-                        <small className="text-muted">
-                          Comentando como {user.nombre}
-                        </small>
-                      </div>
-                    ) : (
-                      <div className="mb-2">
-                        <small className="text-muted">
-                          Puedes comentar como invitado; el comentario quedará
-                          pendiente de aprobación.
-                        </small>
-                      </div>
-                    )}
-
-                    <textarea
-                      className="form-control mb-2"
-                      rows={3}
-                      maxLength={250}
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Escribe tu comentario (máx. 250 caracteres)"
-                    />
-
-                    <div className="d-flex justify-content-end">
-                      <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={!commentText || commentText.trim() === ""}
-                      >
-                        Enviar comentario
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={prevImage}>
-                  Anterior
-                </button>
-                <button className="btn btn-secondary" onClick={nextImage}>
-                  Siguiente
-                </button>
-                <button className="btn btn-danger" onClick={closeDetail}>
-                  Cerrar
-                </button>
-              </div>
+        <ModalDetalleImagen
+          img={imagenes[selectedIndex]}
+          show3D={show3D}
+          onToggle3D={() => setShow3D((s) => !s)}
+          onClose={closeDetail}
+        >
+          <h6>Comentarios</h6>
+          {isAdmin && (
+            <div className="mb-3">
+              <h6>Comentarios pendientes</h6>
+              <ListaComentariosPendientes
+                pendingComments={pendingComments}
+                loadingPending={loadingPending}
+                onModerate={handleModerate}
+                moderatingId={moderatingId}
+              />
             </div>
+          )}
+          {loadingComments ? (
+            <Cargador text="Cargando comentarios..." />
+          ) : (
+            <ListaComentarios comments={comments} />
+          )}
+          <FormComentario
+            user={user}
+            commentText={commentText}
+            setCommentText={setCommentText}
+            onSubmit={handleCommentSubmit}
+          />
+          <div className="modal-footer">
+            <button className="btn btn-secondary" onClick={prevImage}>
+              Anterior
+            </button>
+            <button className="btn btn-secondary" onClick={nextImage}>
+              Siguiente
+            </button>
+            <button className="btn btn-danger" onClick={closeDetail}>
+              Cerrar
+            </button>
           </div>
-        </div>
+        </ModalDetalleImagen>
       )}
 
       {/* MODAL EDITAR */}
-      {showEditModal && (
-        <div className="modal show d-block">
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Editar Imagen</h5>
-                <button
-                  className="btn-close"
-                  onClick={() => setShowEditModal(false)}
-                />
-              </div>
-
-              <form onSubmit={handleEditSubmit}>
-                <div className="modal-body">
-                  <label className="form-label">Título</label>
-                  <input
-                    className="form-control"
-                    value={editData.titulo}
-                    onChange={(e) =>
-                      setEditData({ ...editData, titulo: e.target.value })
-                    }
-                    required
-                  />
-
-                  <label className="form-label mt-3">Categoría</label>
-                  <select
-                    className="form-select"
-                    value={editData.categoria_id}
-                    onChange={(e) =>
-                      setEditData({ ...editData, categoria_id: e.target.value })
-                    }
-                  >
-                    <option value="">Sin categoría</option>
-                    {categorias.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre}
-                      </option>
-                    ))}
-                  </select>
-
-                  <label className="form-label mt-3">Autor</label>
-                  <input
-                    className="form-control"
-                    value={editData.autor}
-                    onChange={(e) =>
-                      setEditData({ ...editData, autor: e.target.value })
-                    }
-                    required
-                  />
-
-                  <label className="form-label mt-3">Descripción</label>
-                  <textarea
-                    className="form-control"
-                    value={editData.descripcion}
-                    onChange={(e) =>
-                      setEditData({ ...editData, descripcion: e.target.value })
-                    }
-                  />
-
-                  <label className="form-label mt-3">Palabras clave</label>
-                  <input
-                    className="form-control"
-                    value={editData.palabras_clave}
-                    onChange={(e) =>
-                      setEditData({
-                        ...editData,
-                        palabras_clave: e.target.value,
-                      })
-                    }
-                  />
-
-                  <label className="form-label mt-3">
-                    Reemplazar imagen (opcional)
-                  </label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    accept=".jpg,.jpeg,.png"
-                    onChange={(e) =>
-                      setEditData({ ...editData, archivo: e.target.files[0] })
-                    }
-                  />
-                </div>
-
-                <div className="modal-footer">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setShowEditModal(false)}
-                  >
-                    Cancelar
-                  </button>
-                  <button className="btn btn-primary" type="submit">
-                    Guardar cambios
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalEditarImagen
+        show={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        categorias={categorias}
+        editData={editData}
+        setEditData={setEditData}
+        onSubmit={handleEditSubmit}
+      />
     </div>
   );
 }

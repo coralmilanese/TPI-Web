@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const jwtSecret = process.env.JWT_SECRET || "cambiame_este_secreto";
+const jwtSecret = process.env.JWT_SECRET || "abc";
 const jwtExpiry = process.env.JWT_EXPIRES_IN || "8h";
 
 // =============================================
@@ -86,7 +86,7 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error login:", error);
+    console.error(" Error login:", error);
     res.status(500).json({ error: "Error de servidor" });
   }
 });

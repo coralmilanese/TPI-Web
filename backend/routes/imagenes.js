@@ -1,19 +1,18 @@
 // backend/routes/imagenes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const upload = require('../middlewares/upload');
-const pool = require('../db/db');
+const upload = require("../middlewares/upload");
+const pool = require("../db/db");
 const fs = require("fs");
 const path = require("path");
 
 // =========================================================
 // ================ SUBIR IMAGEN (POST) =====================
 // =========================================================
-router.post('/', (req, res) => {
+router.post("/", (req, res) => {
   upload.single("imagen")(req, res, async (err) => {
-
     if (err) {
-      console.error("❌ Error procesando archivo:", err);
+      console.error(" Error procesando archivo:", err);
       return res.status(500).json({ error: "Error al procesar archivo" });
     }
 
@@ -22,7 +21,8 @@ router.post('/', (req, res) => {
         return res.status(400).json({ error: "No se recibió archivo" });
       }
 
-      const { titulo, categoria_id, autor, descripcion, palabras_clave } = req.body;
+      const { titulo, categoria_id, autor, descripcion, palabras_clave } =
+        req.body;
 
       const sql = `
         INSERT INTO imagenes
@@ -37,35 +37,33 @@ router.post('/', (req, res) => {
         descripcion || null,
         palabras_clave || null,
         req.file.filename,
-        req.file.size
+        req.file.size,
       ];
 
       await pool.query(sql, params);
 
       res.json({ mensaje: "Imagen subida correctamente" });
-
     } catch (error) {
-      console.error("❌ Error SQL:", error);
+      console.error("Error SQL:", error);
       res.status(500).json({ error: "Error en servidor" });
     }
   });
 });
 
-
 // =========================================================
 // ================= EDITAR IMAGEN (PUT) ====================
 // =========================================================
 
-router.put('/:id', (req, res) => {
+router.put("/:id", (req, res) => {
   upload.single("imagen")(req, res, async (err) => {
-
     if (err) {
-      console.error("❌ Error procesando archivo:", err);
+      console.error("Error procesando archivo:", err);
       return res.status(500).json({ error: "Error al procesar archivo" });
     }
 
     const { id } = req.params;
-    const { titulo, categoria_id, autor, descripcion, palabras_clave } = req.body;
+    const { titulo, categoria_id, autor, descripcion, palabras_clave } =
+      req.body;
 
     try {
       // buscar imagen previa
@@ -106,23 +104,21 @@ router.put('/:id', (req, res) => {
         descripcion,
         palabras_clave,
         filename,
-        id
+        id,
       ]);
 
       res.json({ mensaje: "Imagen actualizada correctamente" });
-
     } catch (error) {
-      console.error("❌ Error SQL:", error);
+      console.error(" Error SQL:", error);
       res.status(500).json({ error: "Error editando imagen" });
     }
   });
 });
 
-
 // =========================================================
 // ================ LISTAR IMÁGENES (GET) ===================
 // =========================================================
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT 
@@ -133,24 +129,22 @@ router.get('/', async (req, res) => {
       ORDER BY i.creado_en DESC
     `);
 
-    const imagenes = rows.map(img => ({
+    const imagenes = rows.map((img) => ({
       ...img,
-      url: `http://localhost:4000/uploads/${img.filename}`
+      url: `http://localhost:4000/uploads/${img.filename}`,
     }));
 
     res.json(imagenes);
-
   } catch (err) {
-    console.error("❌ Error listando imágenes:", err);
+    console.error("Error listando imágenes:", err);
     res.status(500).json({ error: "Error al listar imágenes" });
   }
 });
 
-
 // =========================================================
 // ================ ELIMINAR IMAGEN (DELETE) ===============
 // =========================================================
-router.delete('/:id', async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -171,12 +165,10 @@ router.delete('/:id', async (req, res) => {
     await pool.query("DELETE FROM imagenes WHERE id = ?", [id]);
 
     res.json({ mensaje: "Imagen eliminada correctamente" });
-
   } catch (err) {
-    console.error("❌ Error eliminando imagen:", err);
+    console.error("Error eliminando imagen:", err);
     res.status(500).json({ error: "Error al eliminar imagen" });
   }
 });
-
 
 module.exports = router;

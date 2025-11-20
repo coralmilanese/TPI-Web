@@ -82,7 +82,7 @@ export default function Layout({ children }) {
             Museo Digital
           </button>
 
-          {/* Desktop menu: visible on large screens */}
+          {/* Desktop menu:  */}
           <div className="d-none d-lg-flex w-100 align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-3">
               <button
@@ -139,7 +139,7 @@ export default function Layout({ children }) {
             </div>
           </div>
 
-          {/* Mobile menu: collapse toggled by hamburger */}
+          {/* Mobile menu: */}
           <button
             className="navbar-toggler d-lg-none"
             type="button"

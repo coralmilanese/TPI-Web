@@ -1,13 +1,13 @@
 // backend/routes/comentarios.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const pool = require('../db/db');
-const auth = require('../middlewares/auth');
+const pool = require("../db/db");
+const auth = require("../middlewares/auth");
 
 // =============================
 // 1. Crear comentario (público)
 // =============================
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { imagen_id, contenido, usuario_id } = req.body;
 
@@ -16,7 +16,9 @@ router.post('/', async (req, res) => {
     }
 
     if (contenido.length > 250) {
-      return res.status(400).json({ error: "Comentario demasiado largo (250 máx)" });
+      return res
+        .status(400)
+        .json({ error: "Comentario demasiado largo (250 máx)" });
     }
 
     await pool.query(
@@ -26,7 +28,6 @@ router.post('/', async (req, res) => {
     );
 
     res.json({ mensaje: "Comentario enviado y pendiente de aprobación" });
-
   } catch (error) {
     console.error("❌ Error creando comentario:", error);
     res.status(500).json({ error: "Error en servidor" });
@@ -36,7 +37,7 @@ router.post('/', async (req, res) => {
 // ===============================================
 // 2. Obtener comentarios aprobados (público)
 // ===============================================
-router.get('/imagen/:id', async (req, res) => {
+router.get("/imagen/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -50,7 +51,6 @@ router.get('/imagen/:id', async (req, res) => {
     );
 
     res.json(rows);
-
   } catch (error) {
     console.error("❌ Error obteniendo comentarios:", error);
     res.status(500).json({ error: "Error en servidor" });
@@ -60,7 +60,7 @@ router.get('/imagen/:id', async (req, res) => {
 // ===============================================
 // 3. Comentarios pendientes (solo admin)
 // ===============================================
-router.get('/pendientes', auth, async (req, res) => {
+router.get("/pendientes", auth, async (req, res) => {
   if (req.user.rol !== "admin")
     return res.status(403).json({ error: "Solo administradores" });
 
@@ -75,7 +75,6 @@ router.get('/pendientes', auth, async (req, res) => {
     );
 
     res.json(rows);
-
   } catch (error) {
     console.error("❌ Error pendientes:", error);
     res.status(500).json({ error: "Error en servidor" });
@@ -85,7 +84,7 @@ router.get('/pendientes', auth, async (req, res) => {
 // ===============================================
 // 4. Aprobar / Rechazar comentario (solo admin)
 // ===============================================
-router.put('/:id', auth, async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   if (req.user.rol !== "admin")
     return res.status(403).json({ error: "Solo administradores" });
 
@@ -97,15 +96,14 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(400).json({ error: "Estado inválido" });
     }
 
-    await pool.query(
-      `UPDATE comentarios SET estado = ? WHERE id = ?`,
-      [estado, id]
-    );
+    await pool.query(`UPDATE comentarios SET estado = ? WHERE id = ?`, [
+      estado,
+      id,
+    ]);
 
     res.json({ mensaje: "Comentario actualizado correctamente" });
-
   } catch (error) {
-    console.error("❌ Error moderando:", error);
+    console.error(" Error moderando:", error);
     res.status(500).json({ error: "Error en servidor" });
   }
 });

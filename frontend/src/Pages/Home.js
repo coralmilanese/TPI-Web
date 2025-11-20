@@ -1,10 +1,10 @@
 // src/Pages/Home.js
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 export default function Home() {
-  const navigate = useNavigate();
+  // navigation handled by global navbar in Layout
   const [imagenes, setImagenes] = useState([]);
 
   // hero background: usa la última imagen subida si existe
@@ -70,28 +70,10 @@ export default function Home() {
             Donde el arte se encuentra con la tecnología.
           </p>
 
-          <div className="mt-4 d-flex justify-content-center gap-3">
-            <button
-              className="btn btn-outline-light btn-lg px-4"
-              onClick={() => navigate("/galeria")}
-            >
+          <div className="mt-4">
+            <Link to="/galeria" className="btn btn-outline-light btn-lg px-4">
               Explorar Galería
-            </button>
-
-            {/* 🔥 NUEVO BOTÓN — sin romper diseño */}
-            <button
-              className="btn btn-outline-light btn-lg px-4"
-              onClick={() => navigate("/subir-imagen")}
-            >
-              Subir Imagen
-            </button>
-
-            <button
-              className="btn btn-light btn-lg px-4"
-              onClick={() => navigate("/login")}
-            >
-              Ingresar
-            </button>
+            </Link>
           </div>
         </div>
       </header>

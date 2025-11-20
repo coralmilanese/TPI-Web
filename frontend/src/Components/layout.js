@@ -13,6 +13,13 @@ export default function Layout({ children }) {
       return null;
     }
   });
+  const [isExpanded, setIsExpanded] = useState(() => {
+    try {
+      return typeof window !== "undefined" && window.innerWidth >= 992;
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     function onStorage(e) {
@@ -26,7 +33,14 @@ export default function Layout({ children }) {
     }
 
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    function onResize() {
+      setIsExpanded(window.innerWidth >= 992);
+    }
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   function logout() {
@@ -56,70 +70,154 @@ export default function Layout({ children }) {
         }}
       >
         <div className="container">
-          <span
-            className="navbar-brand fw-bold"
+          <button
+            className="navbar-brand fw-bold btn btn-link p-0"
             style={{
-              fontSize: "1.6rem",
-              cursor: "pointer",
-              letterSpacing: "1.5px",
+              fontSize: "1.4rem",
+              letterSpacing: "1.2px",
               color: "#222",
             }}
             onClick={() => navigate("/")}
           >
             Museo Digital
-          </span>
+          </button>
 
-          <div className="d-flex ms-auto align-items-center gap-3">
-            <button
-              className="btn nav-link"
-              style={{ color: "#222" }}
-              onClick={() => navigate("/")}
-            >
-              Inicio
-            </button>
-            <button
-              className="btn nav-link"
-              style={{ color: "#222" }}
-              onClick={() => navigate("/galeria")}
-            >
-              Galería
-            </button>
-            <button
-              className="btn nav-link"
-              style={{ color: "#222" }}
-              onClick={() => navigate("/subir-imagen")}
-            >
-              Subir imagen
-            </button>
+          {/* Desktop menu: visible on large screens */}
+          <div className="d-none d-lg-flex w-100 align-items-center justify-content-between">
+            <div className="d-flex align-items-center gap-3">
+              <button
+                className="btn nav-link"
+                style={{ color: "#222" }}
+                onClick={() => navigate("/")}
+              >
+                Inicio
+              </button>
+              <button
+                className="btn nav-link"
+                style={{ color: "#222" }}
+                onClick={() => navigate("/galeria")}
+              >
+                Galería
+              </button>
+              <button
+                className="btn nav-link"
+                style={{ color: "#222" }}
+                onClick={() => navigate("/subir-imagen")}
+              >
+                Subir imagen
+              </button>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              {user ? (
+                <div className="d-flex align-items-center gap-2">
+                  <span className="navbar-text" style={{ color: "#222" }}>
+                    Hola, {user.nombre || user.name}
+                  </span>
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={logout}
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              ) : (
+                <div className="d-flex align-items-center gap-2">
+                  <button
+                    className="btn btn-dark btn-sm"
+                    onClick={() => navigate("/login")}
+                  >
+                    Ingresar
+                  </button>
+                  <button
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => navigate("/registrarse")}
+                  >
+                    Registrarse
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
-            {user ? (
-              <div className="d-flex align-items-center gap-2">
-                <span className="navbar-text" style={{ color: "#222" }}>
-                  Hola, {user.nombre || user.name}
-                </span>
+          {/* Mobile menu: collapse toggled by hamburger */}
+          <button
+            className="navbar-toggler d-lg-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon" />
+          </button>
+
+          <div
+            className={`collapse navbar-collapse d-lg-none ${
+              isExpanded ? "show" : ""
+            }`}
+            id="mainNavbar"
+          >
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+              <li className="nav-item">
                 <button
-                  className="btn btn-outline-secondary btn-sm"
-                  onClick={logout}
+                  className="btn nav-link"
+                  style={{ color: "#222" }}
+                  onClick={() => navigate("/")}
                 >
-                  Cerrar sesión
+                  Inicio
                 </button>
-              </div>
-            ) : (
-              <div className="d-flex align-items-center gap-2">
+              </li>
+              <li className="nav-item">
                 <button
-                  className="btn btn-dark btn-sm"
-                  onClick={() => navigate("/login")}
+                  className="btn nav-link"
+                  style={{ color: "#222" }}
+                  onClick={() => navigate("/galeria")}
                 >
-                  Ingresar
+                  Galería
                 </button>
+              </li>
+              <li className="nav-item">
                 <button
-                  className="btn btn-outline-dark btn-sm"
-                  onClick={() => navigate("/registrarse")}
+                  className="btn nav-link"
+                  style={{ color: "#222" }}
+                  onClick={() => navigate("/subir-imagen")}
                 >
-                  Registrarse
+                  Subir imagen
                 </button>
-              </div>
-            )}
+              </li>
+            </ul>
+
+            <div className="d-flex align-items-center gap-2">
+              {user ? (
+                <div className="d-flex align-items-center gap-2">
+                  <span className="navbar-text" style={{ color: "#222" }}>
+                    Hola, {user.nombre || user.name}
+                  </span>
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={logout}
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              ) : (
+                <div className="d-flex align-items-center gap-2">
+                  <button
+                    className="btn btn-dark btn-sm"
+                    onClick={() => navigate("/login")}
+                  >
+                    Ingresar
+                  </button>
+                  <button
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => navigate("/registrarse")}
+                  >
+                    Registrarse
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>

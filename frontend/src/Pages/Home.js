@@ -162,7 +162,7 @@ export default function Home() {
       {/* Info */}
       <section className="container text-center py-5">
         <h2 className="fw-bold mb-3" style={{ fontSize: "2rem" }}>
-          Una experiencia curada
+          Una experiencia hecha a medida
         </h2>
 
         <p

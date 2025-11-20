@@ -11,7 +11,7 @@ export default function ModalEditarImagen({
   if (!show) return null;
   return (
     <div className="modal show d-block">
-      <div className="modal-dialog">
+      <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Editar Imagen</h5>

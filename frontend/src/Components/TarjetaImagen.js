@@ -15,7 +15,7 @@ export default function TarjetaImagen({
       <img
         src={img.url}
         alt={img.titulo}
-        className="card-img-top"
+        className="card-img-top img-fluid w-100"
         style={{ objectFit: "cover", height: "180px", cursor: "pointer" }}
         onClick={onView}
       />

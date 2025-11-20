@@ -1,5 +1,6 @@
 import React from "react";
 import Image3DWebGL from "./Image3DWebGL";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function ModalDetalleImagen({
   img,
@@ -8,6 +9,9 @@ export default function ModalDetalleImagen({
   onClose,
   children,
 }) {
+  // Crear el JSON de la imagen
+  const imageJSON = JSON.stringify(img, null, 2);
+
   return (
     <div className="modal show d-block">
       <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -53,6 +57,19 @@ export default function ModalDetalleImagen({
                 (Interacción: mover el cursor sobre la imagen)
               </small>
             </div>
+
+            {/* Código QR con el JSON de la imagen */}
+            <div className="mt-3 p-3 bg-light rounded text-center">
+              <div className="d-flex justify-content-center">
+                <QRCodeSVG
+                  value={imageJSON}
+                  size={200}
+                  level="M"
+                  includeMargin={true}
+                />
+              </div>
+            </div>
+
             {children}
           </div>
           <div className="modal-footer">

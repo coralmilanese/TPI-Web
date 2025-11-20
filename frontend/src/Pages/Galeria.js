@@ -8,10 +8,8 @@ import FormComentario from "../Components/FormComentario";
 import ListaComentariosPendientes from "../Components/ListaComentariosPendientes";
 import ModalEditarImagen from "../Components/ModalEditarImagen";
 // import FavoriteButton from "../Components/FavoriteButton";
-import BarraUsuario from "../Components/BarraUsuario";
 import Cargador from "../Components/Cargador";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 function Galeria() {
   const [imagenes, setImagenes] = useState([]);
@@ -39,7 +37,22 @@ function Galeria() {
   const token = localStorage.getItem("token") || null;
   const isAdmin = user?.rol === "admin";
 
-  const navigate = useNavigate();
+  // mantener user sincronizado con localStorage (por si cambia desde otra pestaña)
+  useEffect(() => {
+    function onStorage(e) {
+      if (e.key === "user") {
+        try {
+          const parsed = e.newValue ? JSON.parse(e.newValue) : null;
+          setUser(parsed);
+        } catch (_) {
+          setUser(null);
+        }
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+    // eslint-disable-next-line
+  }, []);
 
   // modal ver
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -131,13 +144,6 @@ function Galeria() {
   };
 
   // ----------------- AUTH helpers -----------------
-  function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/login");
-  }
-
   function authHeaders() {
     const t = localStorage.getItem("token") || null;
     return t ? { headers: { Authorization: `Bearer ${t}` } } : {};
@@ -356,12 +362,6 @@ function Galeria() {
     <div className="container my-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1>Galería</h1>
-        <BarraUsuario
-          user={user}
-          onLogout={logout}
-          onLogin={() => navigate("/login")}
-          onRegister={() => navigate("/register")}
-        />
       </div>
 
       {/* FILTROS */}

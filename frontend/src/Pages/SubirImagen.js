@@ -175,7 +175,7 @@ function SubirImagen() {
               <input
                 className="form-control"
                 type="text"
-                value={autor || userAutor}
+                value={autor ?? userAutor ?? ""}
                 onChange={(e) => setAutor(e.target.value)}
                 placeholder={userAutor ? `Predeterminado: ${userAutor}` : ""}
               />

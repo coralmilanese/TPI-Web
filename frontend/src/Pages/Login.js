@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+// navegación por ubicación para forzar recarga completa después del login
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
-
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +14,7 @@ function Login() {
     try {
       const res = await axios.post("http://localhost:4000/api/auth/login", {
         email,
-        password
+        password,
       });
 
       localStorage.setItem("token", res.data.token);
@@ -24,16 +22,24 @@ function Login() {
 
       setMensaje("Inicio de sesión exitoso ✔");
 
-      setTimeout(() => navigate("/galeria"), 800);
-
+      // forzar recarga completa para que el layout lea el usuario desde localStorage
+      setTimeout(() => {
+        window.location.href = "/galeria";
+      }, 700);
     } catch (error) {
       setMensaje("Credenciales incorrectas ❌");
     }
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center" style={{minHeight:"90vh"}}>
-      <div className="card shadow p-4" style={{maxWidth:"400px", width:"100%"}}>
+    <div
+      className="container d-flex justify-content-center align-items-center"
+      style={{ minHeight: "90vh" }}
+    >
+      <div
+        className="card shadow p-4"
+        style={{ maxWidth: "400px", width: "100%" }}
+      >
         <h2 className="text-center mb-4">Iniciar Sesión</h2>
 
         <form onSubmit={handleSubmit}>

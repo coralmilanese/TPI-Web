@@ -1,5 +1,7 @@
 // frontend/src/Pages/Galeria.js
 import React, { useEffect, useState } from "react";
+import Image3DViewer from "../Components/Image3DViewer";
+import Image3DWebGL from "../Components/Image3DWebGL";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -33,6 +35,7 @@ function Galeria() {
 
   // modal ver
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [show3D, setShow3D] = useState(false);
   // comentarios
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
@@ -135,8 +138,14 @@ function Galeria() {
   const [moderatingId, setModeratingId] = useState(null);
 
   // ----------------- VER / MODAL -----------------
-  const openDetail = (index) => setSelectedIndex(index);
-  const closeDetail = () => setSelectedIndex(null);
+  const openDetail = (index) => {
+    setSelectedIndex(index);
+    setShow3D(false);
+  };
+  const closeDetail = () => {
+    setSelectedIndex(null);
+    setShow3D(false);
+  };
   const prevImage = () =>
     setSelectedIndex((i) => (i === 0 ? imagenes.length - 1 : i - 1));
   const nextImage = () =>
@@ -525,11 +534,23 @@ function Galeria() {
                 <button className="btn-close" onClick={closeDetail}></button>
               </div>
               <div className="modal-body">
-                <img
-                  src={imagenes[selectedIndex].url}
-                  alt={imagenes[selectedIndex].titulo}
-                  className="img-fluid mb-3"
-                />
+                {!show3D && (
+                  <img
+                    src={imagenes[selectedIndex].url}
+                    alt={imagenes[selectedIndex].titulo}
+                    className="img-fluid mb-3"
+                  />
+                )}
+                {show3D && (
+                  <div className="mb-3 d-flex justify-content-center">
+                    {/* prefer WebGL viewer (richer); fallback to CSS viewer if three.js not present */}
+                    <Image3DWebGL
+                      src={imagenes[selectedIndex].url}
+                      alt={imagenes[selectedIndex].titulo}
+                      style={{ width: "100%", maxWidth: 920 }}
+                    />
+                  </div>
+                )}
                 <p>
                   <strong>Autor:</strong> {imagenes[selectedIndex].autor}
                 </p>
@@ -547,6 +568,18 @@ function Galeria() {
                 </p>
 
                 <hr />
+
+                <div className="mb-3 d-flex gap-2">
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => setShow3D((s) => !s)}
+                  >
+                    {show3D ? "Volver a 2D" : "Ver en 3D"}
+                  </button>
+                  <small className="text-muted align-self-center">
+                    (Interacción: mover el cursor sobre la imagen)
+                  </small>
+                </div>
 
                 <div>
                   <h6>Comentarios</h6>
